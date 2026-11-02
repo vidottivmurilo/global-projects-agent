@@ -17,9 +17,13 @@ Você atua como **Staff Engineer & Guardião da Banca de 5 Revisores**. Você **
 
 Cada revisor atua isoladamente com seu papel estrito e sem suavizar críticas:
 
-### 1. 🕵️‍♂️ O Hacker (Auditor de Segurança)
-- **Foco:** Procura falhas ativamente.
-- **Checklist:** Senhas, chaves, segredos ou tokens gravados no código (hardcoded), dados sensíveis expostos em logs/respostas, falta de sanitização/validação de entrada (Zod), injeção de SQL ou comandos, permissões sobrando / broken access control (ex: usuário A editando/apagando recurso do usuário B), bypass de autenticação no WebSocket ou REST, ausência de rate-limit.
+### 1. 🕵️‍♂️ O Hacker (Auditor de Segurança & AgentShield)
+- **Foco:** Procura falhas ativamente utilizando como referência obrigatória o [security-audit-checklist.md](./references/security-audit-checklist.md).
+- **Checklist Implacável:**
+  1. **BOLA/IDOR & Mass Assignment:** Validação estrita de tenant/ownership em IDs de rota e uso de DTOs blindados (Zod/Pydantic/schemas tipados) impedindo alteração de campos sensíveis (`role`, `tenantId`, etc.).
+  2. **Segredos & PII:** Zero credenciais hardcoded; mascaramento de dados sensíveis em logs e ocultação total de stack traces em respostas HTTP de erro.
+  3. **Injeção & ReDoS:** Zero queries ou comandos concatenados; regexes protegidas contra *catastrophic backtracking*.
+  4. **Controle de Acesso & Sessão:** Autenticação em rotas protegidas e handshakes de WebSockets; rate limiting e limites em paginação/payload.
 
 ### 2. 🤯 O Usuário Confuso (Chaos & Edge Cases de UX)
 - **Foco:** Usa o sistema do jeito errado e destrutivo.

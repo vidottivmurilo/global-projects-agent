@@ -20,7 +20,8 @@ Questione e alinhe com o usuário:
 1. **Stack e Ecossistema:** Linguagem/Runtime Backend (ex: C# .NET 9, Java 21 Spring Boot, Python FastAPI, Node/TypeScript), Framework Frontend (ex: React/Next.js, Angular, Vue) e Ferramentas de Teste (xUnit, JUnit, Pytest, Vitest, Playwright).
 2. **Estilo Arquitetural:** Clean Architecture, Hexagonal (Ports & Adapters), Vertical Slice Architecture (VSA) ou Monólito Modular.
 3. **Persistência, Cache e Mensageria:** Banco relacional/NoSQL, estratégia de cache (Redis) e filas/eventos (RabbitMQ, SQS via LocalStack, Kafka).
-4. **Requisitos Não-Funcionais (NFRs):** Throughput esperado, latência máxima, idempotência, concorrência e observabilidade.
+4. **Resiliência de Banco & Migrations (Expand & Contract):** Invariante de migrações reversíveis e compatíveis com Zero-Downtime (colunas novas nascem opcionais/nullable com backfill planejado; nunca fazer `DROP/RENAME` destrutivo direto).
+5. **Requisitos Não-Funcionais (NFRs):** Throughput esperado, latência máxima, idempotência, concorrência e observabilidade.
 
 ### Passo 2: Geração do `specs/architecture-spine.md`
 Utilize o template em [architecture-spine-template.md](./references/architecture-spine-template.md) para gerar o documento mestre que vincula todos os subagentes futuros.

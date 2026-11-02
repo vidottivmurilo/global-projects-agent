@@ -30,6 +30,11 @@ Você atua como **Analista de Sistemas Sênior de Backend & Designer de Contrato
 2. **Regra do `operationId` Obrigatório:** Todo endpoint DEVE possuir um `operationId` explícito em `camelCase` (ex: `createShortUrl`, `getUrlMetrics`, `listUserLinks`). Esse `operationId` é a chave primária usada pela Matriz de Rastreabilidade para cobrar a implementação no Backend e no Frontend.
 3. **Schemas de Request e Response Completos:** Defina tipos, formatos (`uuid`, `date-time`, `uri`), restrições (`minLength`, `maxLength`, `minimum`, `enum`) e o schema de erro padrão.
 
+### 1.3. Especificação de Migração Resiliente de Dados (Quando envolver persistência)
+- Para toda funcionalidade que crie ou altere tabelas/schemas:
+  1. **Padrão Expand & Contract (Zero-Downtime):** Toda adição de coluna deve ser retrocompatível (nasce opcional/nullable ou com valor default). É proibido prescrever `DROP COLUMN` ou renomeações diretas em uma única etapa sem compatibilidade com pods legados em execução.
+  2. **Plano de Reversão (Down Migration):** Documente explicitamente o script ou estratégia de reversão sem perda de dados históricos.
+
 ---
 
 ## 2. Guardrails do Analista de Backend

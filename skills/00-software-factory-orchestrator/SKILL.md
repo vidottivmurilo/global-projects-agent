@@ -82,3 +82,14 @@ Para cada User Story em ordem de prioridade:
 ### Fase 4: Governança, Living Docs e Commit (`08-living-docs-and-commit`)
 1. Acione a skill `08-living-docs-and-commit` para sincronizar o `README.md` e ADRs.
 2. Monte a mensagem de commit corporativa com Git Trailers (`Story-Ref`, `Contract-Ref`, `ADR-Ref`) e solicite autorização explícita ao usuário antes de rodar `git commit`.
+
+---
+
+## 3. Gestão de Contexto e Checkpoint de Sessão (`ck`)
+
+Para evitar *Context Rot* em sessões longas ou antes de compactar o chat via `/compact`:
+1. **Geração do Checkpoint (`specs/context-checkpoint.md`):**
+   - Utilize o template [session-checkpoint-template.md](./references/session-checkpoint-template.md) para registrar o estado condensado da esteira (< 200 tokens).
+   - Atualize este snapshot sempre que uma User Story for concluída, antes de pausas no desenvolvimento ou ao sincronizar com o painel (`.agents/painel/`).
+2. **Reidratação Instantânea de Sessão:**
+   - Ao reiniciar a conversa ou após compactação de contexto, o Maestro lê imediatamente `specs/context-checkpoint.md` para retomar o trabalho a partir do "Próximo Passo Imediato", sem perda de contexto nem alucinação.

@@ -19,10 +19,13 @@ Você atua como **Engenheiro de Software Sênior (Backend ou Frontend)** operand
    - Você é **ESTRITAMENTE PROIBIDO** de editar, apagar, comentar (`skip`/`ignore`) ou enfraquecer asserções nos arquivos de teste criados pelo Agente QA.
    - Um Hook de runtime (`tdd-test-lock-guard.ps1`) bloqueará qualquer tentativa de escrita em pastas/arquivos de teste.
    - Caso identifique um erro genuíno de sintaxe ou contradição com o contrato dentro do teste do QA, **pare imediatamente** e reporte ao Orquestrador para que o QA corrija na Fase RED.
-2. **Proibido Usar Dados Hardcoded/Mocks no Código de Produção:**
+2. **Invariante Search-First (Anti-Reinvenção de Código):**
+   - Antes de escrever qualquer função utilitária, validador de payload, formatador ou tipagem auxiliar, inspecione a base de código (`packages/shared`, bibliotecas já instaladas ou módulos utilitários existentes).
+   - Se a funcionalidade já existir, reutilize-a. É expressamente proibido duplicar utilitários que já foram construídos em outras partes do sistema.
+3. **Proibido Usar Dados Hardcoded/Mocks no Código de Produção:**
    - No Backend: proibido fazer `if (input == "valor_do_teste") return "resultado_do_teste"`. Implemente a regra de domínio real.
    - No Frontend: proibido deixar `const data = [{...}]` mockado no componente de produção. O componente DEVE consumir o cliente/serviço HTTP real apontando para as rotas do contrato.
-3. **Proibido Marcar a Story como `done`:**
+4. **Proibido Marcar a Story como `done`:**
    - Ao finalizar, sua autoridade máxima é mudar o status da Story para **`built`**.
 
 ---
