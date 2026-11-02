@@ -1,0 +1,17 @@
+﻿{
+  "tdd-green-test-lock": {
+    "enabled": true,
+    "PreToolUse": [
+      {
+        "matcher": "write_file|edit_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/tdd-test-lock-guard.ps1",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
