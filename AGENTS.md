@@ -36,8 +36,9 @@ NUNCA dispare a esteira completa de subagentes automaticamente para dúvidas, es
    - O usuário aciona **apenas uma Skill específica** por vez (ex: *"roda só o Analista de Contrato `02`"* ou *"cria só o teste RED `05` para eu testar"* ou *"roda só o Code Reviewer `07`"*).
    - Execute estritamente a Skill solicitada, apresente o resultado e **pare** para o usuário testar e validar antes de sugerir o próximo passo.
 3. **🚀 Marcha 3 — Modo Esteira Completa (`00-software-factory-orchestrator`):**
-   - Acionado quando o usuário pede para construir um Projeto, Épico ou User Story completa pela esteira.
-   - Pode rodar em cadência **Pausada por Fase (Step-Gated)** — pedindo "ok" a cada transição entre Analista -> QA RED -> Dev GREEN -> Reviewer — ou **Contínua por User Story (Story-Gated)** — rodando de RED até `built` após aprovação do plano da Story.
+   - Acionado quando o usuário pede para construir um Projeto, Épico ou User Story completa pela esteira com qualidade industrial.
+   - **Modo Rígido Multi-Agente (Padrão Obrigatório):** A esteira opera estritamente através de **atividades-filho independentes** via `invoke_subagent`. O Maestro coordena e não escreve código de produção nem testes na conversa pai.
+   - Pode rodar em cadência **Pausada por Fase (Step-Gated)** — aguardando validação do usuário a cada transição — ou **Contínua por User Story (Story-Gated)** — rodando de RED até `built` e passando pela Banca dos 5 Revisores antes de promover a Story para `done`.
 
 ## 6. Leis de Ferro da Esteira Multi-Agente (Software Factory)
 Quando estiver operando na **Marcha 2 (Fase Isolada)** ou **Marcha 3 (Esteira Completa)**:
@@ -47,3 +48,4 @@ Quando estiver operando na **Marcha 2 (Fase Isolada)** ou **Marcha 3 (Esteira Co
    - **Fase RED (Agente QA):** Escreve o teste automatizado e apenas o stub/interface vazia necessária para compilar. O teste DEVE falhar por asserção (*Clean Red*), nunca por erro de sintaxe/compilação.
    - **Fase GREEN (Agentes Dev Back/Front):** É estritamente proibido alterar, comentar ou enfraquecer testes criados pelo QA (protegido via `.tdd-green-lock` e Hook `PreToolUse`).
 4. **Separação `built` vs `done` & A Banca dos 5 Revisores:** Agentes Desenvolvedores só podem mover uma Story até o status `built`. Somente a **Banca de 5 Revisores (Hacker, Usuário Confuso, Programador Sênior, Testador e Chefe dos Desenvolvedores)** na Skill `07-code-reviewer-gate`, após auditoria implacável sobre o `git diff baseline_revision..HEAD`, pode emitir o veredito unânime de aprovação para a transição para `done`. Se qualquer revisor apontar falha crítica ou de segurança, o código é **REPROVADO** e devolvido com a lista consolidada de correções.
+5. **Obrigatoriedade da Atividade-Filho (`invoke_subagent`):** No Modo Rígido da esteira, é terminantemente proibido o agente pai (Maestro) implementar código de produção ou testes diretamente no chat principal. Cada fase (QA RED, Dev GREEN, Banca de Revisores) DEVE ser delegada a um subagente independente disparado via `invoke_subagent`. O Maestro atua como coordenador de arquitetura, gerencia o Kanban, recebe os relatórios dos filhos e reporta ao usuário.
