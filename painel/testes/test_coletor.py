@@ -25,7 +25,7 @@ class TestColetorFabrica(unittest.TestCase):
         
         (self.specs_dir / "kanban-board.md").write_text("""# Quadro Kanban
 | ID | Épico | Título da User Story | Prioridade | Story Points | Escopo (Back/Front) | Contrato (`operationId`) | Status | Loops de Review | Arquivo do Plano |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | `US-001` | `EPIC-01` | Criação de Link | `P1` | `3` | `Full-Stack` | `createShortUrl` | `in-progress` | `0` | [US-001-plan.md](./stories/US-001-plan.md) |
 | `US-002` | `EPIC-01` | Redirecionamento | `P1` | `3` | `Full-Stack` | `resolveShortUrl` | `done` | `0` | [US-002-plan.md](./stories/US-002-plan.md) |
 """, encoding="utf-8")
@@ -69,6 +69,27 @@ class TestColetorFabrica(unittest.TestCase):
         self.assertEqual(paridade["total_endpoints"], 2)
         self.assertEqual(paridade["cobertos"], 2)
         self.assertEqual(paridade["percentual"], 100)
+
+    def test_ler_stories_individuais(self):
+        (self.stories_dir / "US-003-metrics.md").write_text("""---
+id: "US-003"
+title: "Métricas de Acesso"
+points: 5
+status: "in-progress"
+priority: "P2"
+---
+# US-003
+""", encoding="utf-8")
+        stories = coletor.ler_stories_individuais(self.specs_dir)
+        self.assertEqual(len(stories), 1)
+        self.assertEqual(stories[0]["id"], "US-003")
+        self.assertEqual(stories[0]["pontos"], 5)
+        self.assertEqual(stories[0]["status"], "in-progress")
+
+    def test_detectar_nome_projeto(self):
+        (self.specs_dir / "architecture-spine.md").write_text("# 🏛️ Architecture Spine: Corporate Messenger\n", encoding="utf-8")
+        nome = coletor.detectar_nome_projeto(self.workspace)
+        self.assertEqual(nome, "Corporate Messenger")
 
     def test_ler_quadro(self):
         quadro, erro = coletor.ler_quadro(self.workspace / "quadro.json")

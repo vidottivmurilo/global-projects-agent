@@ -3,7 +3,7 @@
 """Coletor de Telemetria da Fábrica de Software Multi-Agente.
 
 Monitora continuamente o workspace sem dependência de tmux:
-- Lê o status do Kanban e User Stories em specs/
+- Lê o status do Kanban e User Stories em specs/ (stories/*.md e kanban-board.md)
 - Lê a paridade Full-Stack em specs/traceability-matrix.md
 - Detecta a trava de segurança sentinela .tdd-green-lock
 - Monitora missões e pendências do usuário em quadro.json
@@ -54,63 +54,152 @@ def ler_trava_tdd(workspace: Path) -> bool:
     lock_file = workspace / ".tdd-green-lock"
     return lock_file.is_file()
 
+def detectar_nome_projeto(workspace: Path) -> str:
+    # 1. Tenta extrair de specs/architecture-spine.md
+    spine = workspace / "specs" / "architecture-spine.md"
+    if spine.is_file():
+        try:
+            for l in spine.read_text(encoding="utf-8").splitlines():
+                if l.startswith("#") and ":" in l:
+                    nome = l.split(":", 1)[1].strip()
+                    if nome:
+                        return nome
+        except Exception:
+            pass
+    # 2. Tenta extrair de package.json
+    pkg = workspace / "package.json"
+    if pkg.is_file():
+        try:
+            dados = json.loads(pkg.read_text(encoding="utf-8"))
+            if "name" in dados:
+                return dados["name"].replace("-", " ").title()
+        except Exception:
+            pass
+    return workspace.name.replace("-", " ").title()
+
+def ler_stories_individuais(specs_dir: Path) -> list:
+    stories_dir = specs_dir / "stories"
+    stories = []
+    if not stories_dir.is_dir():
+        return stories
+    
+    for f in sorted(stories_dir.glob("US-*.md")):
+        try:
+            conteudo = f.read_text(encoding="utf-8")
+            match = re.search(r"^---\s*\n(.*?)\n---", conteudo, re.DOTALL | re.MULTILINE)
+            if not match:
+                continue
+            bloco = match.group(1)
+            meta = {}
+            for linha in bloco.splitlines():
+                if ":" in linha:
+                    k, v = linha.split(":", 1)
+                    meta[k.strip()] = v.strip().strip('"').strip("'")
+            
+            s_id = meta.get("id") or f.stem.split("-")[0]
+            titulo = meta.get("title") or f.stem
+            try:
+                pts = int(re.sub(r"[^\d]", "", meta.get("points", "0")))
+            except (ValueError, TypeError):
+                pts = 0
+            status = meta.get("status", "backlog").strip()
+            contrato = meta.get("contract_ref", "")
+            
+            stories.append({
+                "id": s_id,
+                "epic": meta.get("epic", "EPIC-01"),
+                "titulo": titulo,
+                "prioridade": meta.get("priority", "P1 (MVP)"),
+                "pontos": pts,
+                "escopo": meta.get("scope", "Full-Stack"),
+                "contrato": contrato,
+                "status": status,
+                "reviews": meta.get("reviews", "0"),
+                "arquivo": f.name
+            })
+        except Exception:
+            continue
+    return stories
+
 def ler_kanban(specs_dir: Path) -> dict:
     kanban_file = specs_dir / "kanban-board.md"
-    stories = []
-    total_points = 0
-    done_points = 0
+    stories_map = {}
     
+    # 1. Lê stories dos arquivos individuais (fonte da verdade de frontmatter)
+    for s in ler_stories_individuais(specs_dir):
+        stories_map[s["id"]] = s
+    
+    # 2. Lê quadro kanban-board.md
     if kanban_file.is_file():
         try:
             texto = kanban_file.read_text(encoding="utf-8")
             linhas = texto.splitlines()
             for l in linhas:
                 l = l.strip()
-                if not l.startswith("|") or ":---" in l or "Título da User Story" in l:
+                if not l.startswith("|") or ":---" in l or "Título da User Story" in l or ("Título" in l and "ID" in l):
                     continue
-                partes = [p.strip().replace("`", "") for p in l.split("|")[1:-1]]
-                if len(partes) >= 8:
-                    s_id = partes[0]
-                    if not s_id.startswith("US-"):
+                partes = [p.strip().replace("`", "").replace("**", "") for p in l.split("|")[1:-1]]
+                if len(partes) >= 3:
+                    s_id = partes[0].strip()
+                    if not re.match(r"^US-\d{2,4}$", s_id):
                         continue
-                    epic = partes[1]
-                    titulo = partes[2]
-                    prio = partes[3]
-                    try:
-                        pts = int(re.sub(r"[^\d]", "", partes[4]))
-                    except (ValueError, TypeError):
-                        pts = 0
-                    escopo = partes[5]
-                    contrato = partes[6]
-                    status = partes[7]
-                    reviews = partes[8] if len(partes) > 8 else "0"
-                    arquivo = partes[9] if len(partes) > 9 else f"{s_id}-plan.md"
                     
-                    total_points += pts
-                    if status.lower() == "done":
-                        done_points += pts
-                        
-                    stories.append({
+                    if len(partes) >= 8:
+                        epic = partes[1]
+                        titulo = partes[2]
+                        prio = partes[3]
+                        try:
+                            pts = int(re.sub(r"[^\d]", "", partes[4]))
+                        except (ValueError, TypeError):
+                            pts = 0
+                        escopo = partes[5]
+                        contrato = partes[6]
+                        status = partes[7]
+                        reviews = partes[8] if len(partes) > 8 else "0"
+                        arquivo = partes[9] if len(partes) > 9 else f"{s_id}-plan.md"
+                    else:
+                        # Tabela simplificada
+                        epic = "EPIC-01"
+                        titulo = partes[1]
+                        try:
+                            pts = int(re.sub(r"[^\d]", "", partes[2]))
+                        except (ValueError, TypeError):
+                            pts = 0
+                        prio = "P1 (MVP)"
+                        escopo = partes[3] if len(partes) > 3 else "Full-Stack"
+                        contrato = ""
+                        status = partes[4] if len(partes) > 4 and partes[4] in ("done", "built", "in-progress", "ready", "backlog") else "ready-for-dev"
+                        reviews = "0"
+                        arquivo = partes[-1] if len(partes) > 4 else f"{s_id}-plan.md"
+                    
+                    story_existente = stories_map.get(s_id, {})
+                    stories_map[s_id] = {
                         "id": s_id,
-                        "epic": epic,
-                        "titulo": titulo,
-                        "prioridade": prio,
-                        "pontos": pts,
-                        "escopo": escopo,
-                        "contrato": contrato,
-                        "status": status,
-                        "reviews": reviews,
-                        "arquivo": arquivo
-                    })
+                        "epic": epic or story_existente.get("epic", "EPIC-01"),
+                        "titulo": titulo or story_existente.get("titulo", s_id),
+                        "prioridade": prio or story_existente.get("prioridade", "P1 (MVP)"),
+                        "pontos": pts or story_existente.get("pontos", 0),
+                        "escopo": escopo or story_existente.get("escopo", "Full-Stack"),
+                        "contrato": contrato or story_existente.get("contrato", ""),
+                        "status": story_existente.get("status") or status,
+                        "reviews": reviews or story_existente.get("reviews", "0"),
+                        "arquivo": arquivo or story_existente.get("arquivo", f"{s_id}-plan.md")
+                    }
         except Exception:
             pass
 
+    stories = list(stories_map.values())
+    stories.sort(key=lambda s: s["id"])
+    
+    total_points = sum(s["pontos"] for s in stories)
+    done_points = sum(s["pontos"] for s in stories if s["status"].lower() in ("done", "completed", "concluido", "concluído"))
+
     colunas = {
-        "backlog": [s for s in stories if s["status"].lower() in ("ready-for-dev", "backlog", "draft")],
-        "in_progress": [s for s in stories if s["status"].lower() == "in-progress"],
-        "built": [s for s in stories if s["status"].lower() == "built"],
-        "in_review": [s for s in stories if s["status"].lower() in ("in-review", "review")],
-        "done": [s for s in stories if s["status"].lower() == "done"]
+        "backlog": [s for s in stories if s["status"].lower() in ("ready-for-dev", "backlog", "draft", "ready", "todo")],
+        "in_progress": [s for s in stories if s["status"].lower() in ("in-progress", "in_progress", "progress")],
+        "built": [s for s in stories if s["status"].lower() in ("built", "build")],
+        "in_review": [s for s in stories if s["status"].lower() in ("in-review", "review", "in_review")],
+        "done": [s for s in stories if s["status"].lower() in ("done", "completed", "concluido", "concluído")]
     }
     
     return {
@@ -127,16 +216,19 @@ def ler_paridade(traceability_file: Path) -> dict:
         return {"total_endpoints": 0, "cobertos": 0, "percentual": 0}
     try:
         texto = traceability_file.read_text(encoding="utf-8")
-        linhas = [l.strip() for l in texto.splitlines() if l.strip().startswith("|") and not ":---" in l and not "operationId" in l]
+        linhas = [l.strip() for l in texto.splitlines() if l.strip().startswith("|") and not ":---" in l and not "operationId" in l and not "Requisito" in l]
         total = 0
         cobertos = 0
         for l in linhas:
             partes = [p.strip().replace("`", "") for p in l.split("|")[1:-1]]
-            if len(partes) >= 5 and (partes[0].startswith("FR-") or partes[0].startswith("M-")):
-                total += 1
-                status_paridade = partes[-1]
-                if any(ok in status_paridade for ok in ("✅", "Coberto", "Paridade OK", "[X]", "[x]")):
-                    cobertos += 1
+            if len(partes) >= 5:
+                primeiro = partes[0]
+                if (primeiro.startswith("FR-") or primeiro.startswith("M-") or 
+                    any(m in l for m in ("GET", "POST", "PUT", "DELETE", "PATCH", "WS:", "REST", "UI Component", "Widget"))):
+                    total += 1
+                    status_paridade = partes[-1].lower()
+                    if any(ok in status_paridade for ok in ("✅", "coberto", "paridade ok", "[x]", "planejado", "implementado", "ok")):
+                        cobertos += 1
         pct = int(round((cobertos / total) * 100)) if total > 0 else 100
         return {"total_endpoints": total, "cobertos": cobertos, "percentual": pct}
     except Exception:
@@ -171,6 +263,7 @@ def montar_dados_esteira(workspace: Path, quadro_file: Path, cotas_data: dict = 
     kanban = ler_kanban(specs_dir)
     paridade = ler_paridade(specs_dir / "traceability-matrix.md")
     quadro, erro_quadro = ler_quadro(quadro_file)
+    nome_projeto = detectar_nome_projeto(workspace)
     
     # Determina fase atual do pipeline
     if lock_ativo:
@@ -217,7 +310,7 @@ def montar_dados_esteira(workspace: Path, quadro_file: Path, cotas_data: dict = 
             "missao": {
                 "texto": m.get("missao") or ("Em execução" if estado == "trabalhando" else "Aguardando próxima etapa"),
                 "situacao": estado,
-                "frente": m.get("frente", "Esteira")
+                "frente": m.get("frente") or nome_projeto
             },
             "prs": []
         })
@@ -266,8 +359,8 @@ def montar_dados_esteira(workspace: Path, quadro_file: Path, cotas_data: dict = 
         },
         "frentes": [
             {
-                "nome": "Encurtador de Links (MVP)",
-                "membros": [{"nome": a["nome"], "situacao": a["estado"]} for a in agentes if a["estado"] == "trabalhando"]
+                "nome": nome_projeto,
+                "membros": [{"nome": a["nome"], "situacao": a["estado"]} for a in agentes if a["estado"] in ("trabalhando", "esperando")]
             }
         ]
     }
