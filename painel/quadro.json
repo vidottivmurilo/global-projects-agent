@@ -1,0 +1,16 @@
+{
+  "editado_em": "2026-11-02T14:00:00Z",
+  "missoes": {
+    "Maestro / Orquestrador": {
+      "missao": "Construção autônoma do Painel Visual de Telemetria da Fábrica",
+      "situacao": "trabalhando",
+      "frente": "EPIC-02 Painel Visual"
+    },
+    "Dev Backend": {
+      "missao": "Implementação da US-001 (Encurtador de Links com Base62)",
+      "situacao": "trabalhando",
+      "frente": "EPIC-01 MVP"
+    }
+  },
+  "pendencias": []
+}

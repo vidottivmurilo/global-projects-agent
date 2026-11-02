@@ -1,0 +1,8 @@
+# Dados de runtime do painel
+painel/publico/dados.json
+painel/publico/dados.js
+painel/publico/*.tmp
+
+# Python cache
+__pycache__/
+*.py[cod]

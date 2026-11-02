@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel da Fábrica Multi-Agente</title>
+<style>
+  :root {
+    color-scheme: light;
+    --plano: #f2f2ef; --sup: #ffffff; --sup2: #f4f4f1;
+    --tinta: #1b1b1a; --tinta2: #55554f; --apagado: #6d6d68;
+    --fio: #e8e8e4; --fio-forte: #d2d2cd; --barra: #a9a9a2;
+    --bom: #1d9a3f; --bom-tinta: #19722f;
+    --aviso: #b87d00; --aviso-tinta: #8a5f00;
+    --critico: #d93a3a; --critico-tinta: #b02a2a;
+    --voce: #2b5fae; --voce-tinta: #2b5fae; --voce-fundo: #e9f0fb;
+    --foco: #2b5fae;
+    --destaque: #7f6ae0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-tema="claro"]) {
+      color-scheme: dark;
+      --plano: #121212; --sup: #1c1c1b; --sup2: #262624;
+      --tinta: #f0f0ec; --tinta2: #b9b9b2; --apagado: #92928c;
+      --fio: #2b2b29; --fio-forte: #3b3b38; --barra: #676761;
+      --bom: #3fc265; --bom-tinta: #5fd57f;
+      --aviso: #f0b429; --aviso-tinta: #f0b429;
+      --critico: #e85c5c; --critico-tinta: #f28a8a;
+      --voce: #8fb4ee; --voce-tinta: #a7c4f2; --voce-fundo: #1f2a3c;
+      --foco: #8fb4ee;
+      --destaque: #a08df0;
+    }
+  }
+  :root[data-tema="escuro"] {
+    color-scheme: dark;
+    --plano: #121212; --sup: #1c1c1b; --sup2: #262624;
+    --tinta: #f0f0ec; --tinta2: #b9b9b2; --apagado: #92928c;
+    --fio: #2b2b29; --fio-forte: #3b3b38; --barra: #676761;
+    --bom: #3fc265; --bom-tinta: #5fd57f;
+    --aviso: #f0b429; --aviso-tinta: #f0b429;
+    --critico: #e85c5c; --critico-tinta: #f28a8a;
+    --voce: #8fb4ee; --voce-tinta: #a7c4f2; --voce-fundo: #1f2a3c;
+    --foco: #8fb4ee;
+    --destaque: #a08df0;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--plano); }
+  body {
+    margin: 0; padding: 16px 24px 24px;
+    background: var(--plano); color: var(--tinta);
+    font: 13px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .num { font-variant-numeric: tabular-nums; }
+  :focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+
+  /* Topo */
+  .topo { display: flex; align-items: baseline; gap: 16px; margin: 0 0 16px; min-height: 28px; }
+  .resumo { color: var(--tinta2); font-size: 14px; }
+  .resumo b { color: var(--tinta); font-weight: 600; }
+  .resumo .sep { color: var(--apagado); margin: 0 8px; }
+  .resumo .badge-esteira {
+    display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px;
+    background: var(--sup2); border: 1px solid var(--fio-forte); border-radius: 999px;
+    font-size: 12px; font-weight: 600; color: var(--destaque);
+  }
+  .resumo .badge-lock {
+    display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px;
+    background: #fdf3e7; border: 1px solid var(--aviso); border-radius: 999px;
+    font-size: 11px; font-weight: 600; color: var(--aviso-tinta);
+  }
+  @media (prefers-color-scheme: dark) {
+    .resumo .badge-lock { background: #2d2417; }
+  }
+  .direita { margin-left: auto; display: flex; align-items: baseline; gap: 16px; }
+  .vivo { display: inline-flex; align-items: center; gap: 6px; color: var(--tinta2); font-variant-numeric: tabular-nums; }
+  .vivo .luz { width: 8px; height: 8px; border-radius: 50%; background: var(--bom); animation: pulso-vivo 2s infinite; }
+  .vivo.velho .luz { background: var(--critico); animation: none; }
+  @keyframes pulso-vivo {
+    0% { transform: scale(0.9); opacity: 0.8; }
+    50% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(0.9); opacity: 0.8; }
+  }
+  button#tema, button#privacidade {
+    font: inherit; color: var(--tinta2); background: none; border: 0; padding: 2px 0; cursor: pointer;
+    text-decoration: underline; text-decoration-color: var(--fio-forte); text-underline-offset: 3px;
+  }
+  button#tema:hover, button#privacidade:hover { color: var(--tinta); }
+  button#refresh {
+    font: inherit; color: var(--tinta2); background: none; border: 0; padding: 4px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 4px; transition: opacity 0.15s ease;
+  }
+  button#refresh:hover { color: var(--tinta); }
+  button#refresh.girando svg { animation: girar-refresh 0.8s linear infinite; }
+  @keyframes girar-refresh { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  /* Superfícies & Cartões */
+  .cartao { background: var(--sup); border-radius: 12px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); border: 1px solid var(--fio); }
+  .cabeca { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 12px 18px 8px; border-bottom: 1px solid var(--fio); }
+  h2 { margin: 0; font-size: 14px; font-weight: 650; display: flex; align-items: center; gap: 8px; }
+  h2 .sub-h2 { font-size: 12px; font-weight: 400; color: var(--apagado); }
+  .cabeca .metricas-topo { display: flex; gap: 14px; font-size: 12px; color: var(--tinta2); }
+  .cabeca .metricas-topo b { color: var(--tinta); }
+
+  /* Kanban Board Grid */
+  .kanban-grid {
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px; padding: 14px 18px 18px;
+    background: var(--plano); border-radius: 0 0 12px 12px;
+  }
+  @media (max-width: 1200px) { .kanban-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 800px) { .kanban-grid { grid-template-columns: 1fr; } }
+
+  .kanban-col {
+    background: var(--sup2); border-radius: 8px; padding: 10px;
+    display: flex; flex-direction: column; min-height: 180px; border: 1px solid var(--fio);
+  }
+  .kanban-col-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px; font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .5px; color: var(--apagado);
+  }
+  .kanban-col-count {
+    background: var(--sup); padding: 1px 6px; border-radius: 999px;
+    border: 1px solid var(--fio-forte); font-weight: 600; color: var(--tinta);
+  }
+  .kanban-cards { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .kanban-card {
+    background: var(--sup); border-radius: 6px; padding: 10px 12px;
+    border: 1px solid var(--fio); box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .kanban-card:hover { transform: translateY(-1px); box-shadow: 0 3px 6px rgba(0,0,0,0.05); }
+  .kanban-card.status-done { border-left: 3px solid var(--bom); }
+  .kanban-card.status-in-progress { border-left: 3px solid var(--destaque); }
+  .kanban-card.status-built { border-left: 3px solid #2fa08e; }
+  .kanban-card.status-in-review { border-left: 3px solid var(--aviso); }
+  .kanban-card-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .kanban-card-id { font-size: 11px; font-weight: 700; color: var(--destaque); }
+  .kanban-card-points { font-size: 10px; font-weight: 600; background: var(--sup2); border: 1px solid var(--fio); padding: 1px 5px; border-radius: 4px; color: var(--tinta2); }
+  .kanban-card-title { font-size: 12px; font-weight: 500; line-height: 1.35; color: var(--tinta); margin-bottom: 6px; }
+  .kanban-card-meta { display: flex; gap: 6px; flex-wrap: wrap; font-size: 10px; color: var(--apagado); }
+  .kanban-card-badge { background: var(--sup2); padding: 1px 5px; border-radius: 3px; border: 1px solid var(--fio); }
+
+  /* Agentes da Esteira (Linhas Flip 3D) */
+  .cabecalho, .face { display: grid; align-items: center; column-gap: 12px; padding: 0 18px; }
+  .cabecalho { grid-template-columns: 220px 140px 1fr 140px; padding-top: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--fio-forte); }
+  .cabecalho span { font-size: 11px; font-weight: 600; color: var(--apagado); text-transform: uppercase; letter-spacing: .4px; }
+  .face.frente { grid-template-columns: 220px 140px 1fr 140px; min-height: 48px; }
+  .face.verso { grid-template-columns: 220px 140px 1fr; min-height: 48px; cursor: pointer; }
+  .linha { border-bottom: 1px solid var(--fio); }
+  .linha:last-child { border-bottom: 0; }
+  .linha-cena { position: relative; overflow: hidden; cursor: pointer; }
+  .linha-cena > .frente, .linha-cena > .verso { position: relative; }
+  .linha-cena > .verso.solta { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .linha-cena > .verso.oculta { visibility: hidden; }
+  .linha.recua { opacity: 0.65; }
+  .linha.recua:hover { opacity: 1; }
+
+  .nome { font-size: 13px; font-weight: 600; }
+  .sub { font-size: 11px; color: var(--apagado); }
+  .estado { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; font-size: 12px; }
+  .estado i { width: 8px; height: 8px; border-radius: 50%; }
+  .estado.trabalhando { color: var(--bom-tinta); font-weight: 600; }
+  .estado.trabalhando i { background: var(--bom); }
+  .estado.ocioso { color: var(--apagado); }
+  .estado.ocioso i { border: 1.5px solid var(--apagado); }
+  .estado.esperando { color: var(--voce-tinta); font-weight: 600; }
+  .estado.esperando i { background: var(--voce); }
+
+  .missao-texto { font-size: 12.5px; color: var(--tinta); }
+  .frente-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: var(--sup2); border: 1px solid var(--fio); color: var(--apagado); }
+
+  /* Precisa de Você */
+  #precisa .nada { padding: 16px 18px; color: var(--apagado); }
+  .pendencia-item { display: grid; grid-template-columns: 24px 1fr auto; padding: 12px 18px; border-bottom: 1px solid var(--fio); align-items: baseline; }
+  .pendencia-item:last-child { border-bottom: 0; }
+  .pendencia-n { font-weight: 700; color: var(--voce); font-size: 12px; }
+  .pendencia-txt { font-weight: 600; color: var(--tinta); }
+  .pendencia-rec { font-weight: 400; font-size: 12px; color: var(--tinta2); margin-top: 3px; }
+  .pendencia-passos { list-style: decimal; margin: 8px 0 0 16px; padding: 0; font-size: 12px; color: var(--tinta2); }
+  .pendencia-passos li { margin-bottom: 4px; }
+  .badge-tipo { font-size: 10px; text-transform: uppercase; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+  .badge-tipo.pergunta { background: #eaf1fb; color: #1a56db; }
+  .badge-tipo.acao { background: #fef08a; color: #854d0e; }
+
+  /* Rodapé */
+  .rodape { margin-top: 14px; color: var(--apagado); font-size: 11px; text-align: center; }
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="resumo" id="resumo">
+    <b>Fábrica de Software</b>
+    <span class="sep">·</span>
+    <span id="badge-fase" class="badge-esteira">Carregando fase...</span>
+    <span id="badge-lock" class="badge-lock" style="display:none">🔒 .tdd-green-lock ativo</span>
+  </div>
+  <div class="direita">
+    <span class="vivo" id="vivo"><span class="luz"></span><span id="vivo-texto">Carregando…</span></span>
+    <button id="privacidade" type="button">Privacidade: ligada</button>
+    <button id="tema" type="button">Tema: automático</button>
+    <button id="refresh" type="button" title="Atualizar dados da esteira">
+      <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13.5 6.5A5.5 5.5 0 0 0 3.2 4.8L2 6" />
+        <path d="M2 2.5V6h3.5" />
+        <path d="M2.5 9.5a5.5 5.5 0 0 0 10.3 1.7L14 10" />
+        <path d="M14 13.5V10h-3.5" />
+      </svg>
+    </button>
+  </div>
+</header>
+
+<main id="principal">
+
+  <!-- 1. Quadro Kanban Visual da Sprint -->
+  <section class="cartao" id="secao-kanban" aria-label="Quadro Kanban da Sprint">
+    <div class="cabeca">
+      <h2>📋 Quadro Kanban & User Stories <span class="sub-h2">· Visão da Sprint</span></h2>
+      <div class="metricas-topo">
+        <span>Stories: <b id="k-total">0</b></span>
+        <span>Concluídas: <b id="k-done">0</b></span>
+        <span>Story Points: <b id="k-pts">0 / 0</b></span>
+        <span>Paridade Full-Stack: <b id="k-paridade">0%</b></span>
+      </div>
+    </div>
+    <div class="kanban-grid" id="kanban-grid">
+      <!-- Colunas preenchidas dinamicamente -->
+    </div>
+  </section>
+
+  <!-- 2. Agentes da Esteira Multi-Agente -->
+  <section class="cartao" aria-label="Subagentes da Fábrica">
+    <div class="cabeca">
+      <h2>🤖 Subagentes da Esteira <span class="sub-h2">· Papéis e Estado Atual</span></h2>
+      <span class="sub-h2">Clique em um agente para alternar detalhes</span>
+    </div>
+    <div class="cabecalho" aria-hidden="true">
+      <span>Papel do Agente</span>
+      <span>Estado</span>
+      <span>Missão Atual</span>
+      <span>Frente</span>
+    </div>
+    <div id="linhas-agentes" role="list"></div>
+  </section>
+
+  <!-- 3. Precisa de Você (Quality Gates) -->
+  <section class="cartao" id="precisa" aria-label="Precisa de Você">
+    <div class="cabeca">
+      <h2>✋ Precisa de Você <span class="sub-h2">· Decisões Humanas e Quality Gates (<span id="precisa-conta">0</span>)</span></h2>
+    </div>
+    <div id="precisa-corpo"></div>
+  </section>
+
+  <!-- 4. Cotas dos Modelos Antigravity -->
+  <section class="cartao" id="contas" aria-label="Cotas das contas" style="display:none">
+    <div class="cabeca">
+      <h2>⚡ Cotas e Limites de Modelos</h2>
+    </div>
+    <div class="contas-grade" id="contas-grade" style="padding:14px 18px"></div>
+  </section>
+
+  <p class="rodape" id="rodape">Fábrica de Software Multi-Agente · Monitoramento Contínuo</p>
+</main>
+
+<script>
+(function () {
+"use strict";
+
+var dados = null;
+var abertoEm = Date.now();
+var LER_A_CADA_MS = 3000;
+
+function el(id) { return document.getElementById(id); }
+function esc(t) { return String(t == null ? "" : t).replace(/[&<>"']/g, function(c) { return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+/* Carrega dados.js via script tag */
+function carregar() {
+  var s = document.createElement("script");
+  s.src = "dados.js?t=" + Date.now();
+  s.onload = s.onerror = function () { s.remove(); };
+  document.head.appendChild(s);
+}
+
+window.__painelDados = function (d) {
+  if (!d) return;
+  dados = d;
+  desenhar();
+};
+
+function desenhar() {
+  if (!dados) return;
+  var agoraS = Date.now() / 1000;
+  var idade = agoraS - dados.gerado_em_epoch;
+  var velho = idade > 60;
+
+  var vivo = el("vivo");
+  vivo.className = "vivo" + (velho ? " velho" : "");
+  el("vivo-texto").textContent = velho ? ("Parado há " + Math.floor(idade) + "s") : "Ao vivo";
+
+  // Topo Esteira
+  if (dados.esteira) {
+    el("badge-fase").textContent = dados.esteira.fase_atual || "Em execução";
+    el("badge-lock").style.display = dados.esteira.lock_ativo ? "inline-flex" : "none";
+  }
+
+  // Kanban
+  if (dados.kanban) {
+    var k = dados.esteira ? dados.esteira.kanban_resumo : {};
+    el("k-total").textContent = k.total_stories || dados.kanban.total_stories;
+    el("k-done").textContent = k.done_stories || dados.kanban.done_stories;
+    el("k-pts").textContent = (k.done_points || dados.kanban.done_points) + " / " + (k.total_points || dados.kanban.total_points);
+    el("k-paridade").textContent = (dados.esteira && dados.esteira.paridade ? dados.esteira.paridade.percentual : 100) + "%";
+
+    desenharKanban(dados.kanban.colunas);
+  }
+
+  // Agentes
+  desenharAgentes(dados.agentes || []);
+
+  // Precisa de você
+  desenharPrecisa(dados.quadro ? dados.quadro.pendencias : []);
+}
+
+function desenharKanban(colunas) {
+  var container = el("kanban-grid");
+  var colConfigs = [
+    { id: "backlog", titulo: "📝 Backlog", cards: colunas.backlog || [] },
+    { id: "in_progress", titulo: "🚧 Em Execução", cards: colunas.in_progress || [] },
+    { id: "built", titulo: "🧪 Construído", cards: colunas.built || [] },
+    { id: "in_review", titulo: "🔍 Code Review", cards: colunas.in_review || [] },
+    { id: "done", titulo: "✅ Concluído", cards: colunas.done || [] }
+  ];
+
+  var html = "";
+  colConfigs.forEach(function (col) {
+    html += '<div class="kanban-col">';
+    html += '  <div class="kanban-col-head">';
+    html += '    <span>' + col.titulo + '</span>';
+    html += '    <span class="kanban-col-count">' + col.cards.length + '</span>';
+    html += '  </div>';
+    html += '  <div class="kanban-cards">';
+    if (col.cards.length === 0) {
+      html += '    <div style="font-size:11px;color:var(--apagado);font-style:italic;text-align:center;padding:12px 0;">Vazio</div>';
+    } else {
+      col.cards.forEach(function (card) {
+        var statusCls = "status-" + (card.status ? card.status.toLowerCase() : "backlog");
+        html += '    <div class="kanban-card ' + statusCls + '">';
+        html += '      <div class="kanban-card-head">';
+        html += '        <span class="kanban-card-id">' + esc(card.id) + '</span>';
+        html += '        <span class="kanban-card-points">' + esc(card.pontos) + ' pts</span>';
+        html += '      </div>';
+        html += '      <div class="kanban-card-title">' + esc(card.titulo) + '</div>';
+        html += '      <div class="kanban-card-meta">';
+        html += '        <span class="kanban-card-badge">' + esc(card.prioridade) + '</span>';
+        if (card.contrato) html += '        <span class="kanban-card-badge"><code>' + esc(card.contrato) + '</code></span>';
+        html += '      </div>';
+        html += '    </div>';
+      });
+    }
+    html += '  </div>';
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+function desenharAgentes(agentes) {
+  var container = el("linhas-agentes");
+  var html = "";
+  agentes.forEach(function (a) {
+    var recua = a.estado !== "trabalhando" ? " recua" : "";
+    html += '<div class="linha' + recua + '">';
+    html += '  <div class="linha-cena">';
+    html += '    <div class="face frente">';
+    html += '      <div><div class="nome">' + esc(a.nome) + '</div><div class="sub">' + esc(a.modelo) + '</div></div>';
+    html += '      <div><span class="estado ' + esc(a.estado) + '"><i></i>' + esc(a.estado.toUpperCase()) + '</span></div>';
+    html += '      <div class="missao-texto">' + esc(a.atividade || (a.missao && a.missao.texto) || "—") + '</div>';
+    html += '      <div><span class="frente-tag">' + esc((a.missao && a.missao.frente) || "Esteira") + '</span></div>';
+    html += '    </div>';
+    html += '  </div>';
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+function desenharPrecisa(pendencias) {
+  var conta = el("precisa-conta");
+  conta.textContent = pendencias ? pendencias.length : 0;
+  var container = el("precisa-corpo");
+  if (!pendencias || pendencias.length === 0) {
+    container.innerHTML = '<div class="nada">✅ Nenhuma pendência humana. A esteira pode seguir autônoma!</div>';
+    return;
+  }
+  var html = "";
+  pendencias.forEach(function (p, i) {
+    var tipo = p.tipo === "pergunta" ? "pergunta" : "acao";
+    html += '<div class="pendencia-item">';
+    html += '  <span class="pendencia-n">' + (i + 1) + '.</span>';
+    html += '  <div>';
+    html += '    <div class="pendencia-txt">' + esc(p.texto) + '</div>';
+    if (p.recomendacao) html += '    <div class="pendencia-rec">💡 <b>Recomendação da IA:</b> ' + esc(p.recomendacao) + '</div>';
+    if (p.passos && p.passos.length > 0) {
+      html += '    <ol class="pendencia-passos">';
+      p.passos.forEach(function (passo) { html += '<li>' + esc(passo) + '</li>'; });
+      html += '    </ol>';
+    }
+    html += '  </div>';
+    html += '  <div><span class="badge-tipo ' + tipo + '">' + tipo + '</span></div>';
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+// Refresh button
+el("refresh").addEventListener("click", function () {
+  var btn = el("refresh");
+  btn.classList.add("girando");
+  fetch("http://127.0.0.1:7420/refresh", { method: "POST", mode: "no-cors" })
+    .then(function () { setTimeout(function () { carregar(); btn.classList.remove("girando"); }, 400); })
+    .catch(function () { carregar(); btn.classList.remove("girando"); });
+});
+
+// Tema
+var tema = "auto";
+function aplicarTema(t) {
+  if (t === "auto") document.documentElement.removeAttribute("data-tema");
+  else document.documentElement.setAttribute("data-tema", t);
+  el("tema").textContent = "Tema: " + t;
+}
+el("tema").addEventListener("click", function () {
+  tema = tema === "auto" ? "escuro" : (tema === "escuro" ? "claro" : "auto");
+  aplicarTema(tema);
+});
+
+carregar();
+setInterval(carregar, LER_A_CADA_MS);
+
+})();
+</script>
+</body>
+</html>
