@@ -1,4 +1,4 @@
-﻿# Regras do Workspace de Estudos & Fábrica de Software
+# Regras do Workspace de Estudos & Fábrica de Software
 
 Você DEVE ler e seguir estas regras para QUALQUER tarefa executada em projetos que contenham este `.agents`.
 
@@ -46,4 +46,4 @@ Quando estiver operando na **Marcha 2 (Fase Isolada)** ou **Marcha 3 (Esteira Co
 3. **TDD Estrito ("Clean Red" -> "Green" -> "Refactor"):**
    - **Fase RED (Agente QA):** Escreve o teste automatizado e apenas o stub/interface vazia necessária para compilar. O teste DEVE falhar por asserção (*Clean Red*), nunca por erro de sintaxe/compilação.
    - **Fase GREEN (Agentes Dev Back/Front):** É estritamente proibido alterar, comentar ou enfraquecer testes criados pelo QA (protegido via `.tdd-green-lock` e Hook `PreToolUse`).
-4. **Separação `built` vs `done`:** Agentes Desenvolvedores só podem mover uma Story até o status `built`. Somente o **Agente Code Reviewer** (após auditoria bifurcada de *Spec Compliance* + *Code Quality* sobre o `git diff baseline_revision..HEAD`) pode aprovar a transição para `done`.
+4. **Separação `built` vs `done` & A Banca dos 5 Revisores:** Agentes Desenvolvedores só podem mover uma Story até o status `built`. Somente a **Banca de 5 Revisores (Hacker, Usuário Confuso, Programador Sênior, Testador e Chefe dos Desenvolvedores)** na Skill `07-code-reviewer-gate`, após auditoria implacável sobre o `git diff baseline_revision..HEAD`, pode emitir o veredito unânime de aprovação para a transição para `done`. Se qualquer revisor apontar falha crítica ou de segurança, o código é **REPROVADO** e devolvido com a lista consolidada de correções.
