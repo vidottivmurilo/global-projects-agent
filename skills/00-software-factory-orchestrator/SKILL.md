@@ -1,4 +1,4 @@
-﻿---
+---
 name: 00-software-factory-orchestrator
 description: >-
   Orquestrador central (Maestro) da Fábrica de Software Multi-Agente. Use esta skill
@@ -34,11 +34,11 @@ Ao acionar a esteira, o Orquestrador DEVE criar ou invocar subagentes com separa
 | :--- | :--- | :--- | :--- |
 | **Arquiteto de Software** | `architect-agent` | `true` (apenas docs/configs) | `01-architecture-spine-adr` |
 | **Analista de Backend & Contratos** | `analyst-backend` | `true` (apenas `specs/`) | `02-analyst-contract-and-back` |
-| **Analista de Frontend & Paridade** | `analyst-frontend` | `true` (apenas `specs/`) | `03-analyst-frontend-and-parity` |
+| **Analista de Frontend & Paridade** | `analyst-frontend` | `true` (apenas `specs/`) | `03-analyst-frontend-and-parity`, `09-frontend-design-craft` |
 | **Agile & Backlog Manager** | `agile-scrum-master` | `true` (apenas `specs/` e GitHub MCP) | `04-agile-story-sharding` |
 | **QA Test Writer (TDD RED)** | `qa-tdd-red` | `true` (apenas `tests/` + stubs) | `05-tdd-red-test-writer` |
 | **Dev Backend (TDD GREEN)** | `dev-backend-green` | `true` (bloqueado em `tests/`) | `06-tdd-green-refactor-dev` |
-| **Dev Frontend (TDD GREEN)** | `dev-frontend-green` | `true` (bloqueado em `tests/`) | `06-tdd-green-refactor-dev` |
+| **Dev Frontend (TDD GREEN)** | `dev-frontend-green` | `true` (bloqueado em `tests/`) | `06-tdd-green-refactor-dev`, `09-frontend-design-craft` |
 | **Code Reviewer & Auditor** | `tech-code-reviewer` | **`false` (Read-Only no código!)** | `07-code-reviewer-gate` |
 | **Git & Living Docs Steward** | `git-docs-steward` | `true` | `08-living-docs-and-commit` |
 

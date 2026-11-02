@@ -21,7 +21,7 @@ Você atua como **Analista Sênior de Frontend & Guardião da Paridade Full-Stac
 3. **Regra de Bloqueio:** Se houver um único `operationId` `user-facing` sem tela, modal, botão ou listagem correspondente no Frontend, você DEVE criá-lo na especificação de Frontend antes de prosseguir.
 
 ### Passo 2: Especificação de Telas e Máquina de Estados de UI (`specs/frontend-spec.md`)
-Para cada tela ou componente interativo, especifique obrigatoriamente:
+Ao especificar os componentes e a jornada visual, consulte obrigatoriamente as diretrizes de design system corporativo e anti-clichê de IA em [09-frontend-design-craft](../09-frontend-design-craft/SKILL.md). Para cada tela ou componente interativo, especifique obrigatoriamente:
 1. **Rota e Hierarquia de Componentes:** (ex: `/links` $\rightarrow$ `LinksDashboardPage` $\rightarrow$ `CreateLinkForm` + `LinksTable`).
 2. **Os 4 Estados Visuais Obrigatórios de Toda Integração Assíncrona:**
    - **⏳ Estado `Loading`:** Skeleton, spinner ou botão desabilitado (`disabled` + texto/ícone de carregamento) para evitar duplo clique;

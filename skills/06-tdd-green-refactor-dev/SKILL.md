@@ -33,7 +33,7 @@ Você atua como **Engenheiro de Software Sênior (Backend ou Frontend)** operand
 1. Leia o arquivo `specs/stories/US-XXX-plan.md`, o contrato em `specs/contracts/` e as invariantes `AD-01..AD-N` em `specs/architecture-spine.md`.
 2. Substitua os Stubs (`NotImplementedException`) pela implementação real nas camadas corretas da arquitetura:
    - **Se Dev Backend:** Entidades/Value Objects $\rightarrow$ Caso de Uso/Service $\rightarrow$ Repository/Adapter $\rightarrow$ Controller/Endpoint + Validações do Contrato.
-   - **Se Dev Frontend:** Cliente/Service Tipado da API $\rightarrow$ Hook/State Manager $\rightarrow$ Componente/Página tratando explicitamente `Loading`, `Empty`, `Error` e `Success`.
+   - **Se Dev Frontend:** Cliente/Service Tipado da API $\rightarrow$ Hook/State Manager $\rightarrow$ Componente/Página tratando explicitamente `Loading`, `Empty`, `Error` e `Success`, seguindo obrigatoriamente as diretrizes visuais e ergonômicas de [09-frontend-design-craft](../09-frontend-design-craft/SKILL.md) (sem clichês de IA, densidade confortável, tokens semânticos e atalhos de teclado).
 3. Execute a suíte de testes da Story até que **100% dos testes da Story passem (GREEN)**.
 4. Execute a **suíte completa de testes do projeto** para garantir zero regressão em funcionalidades anteriores.
 
