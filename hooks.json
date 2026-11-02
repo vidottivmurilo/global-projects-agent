@@ -1,4 +1,14 @@
 ﻿{
+  "auto-sync-agents-submodule": {
+    "enabled": true,
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/sync-agents.ps1",
+        "timeout": 10
+      }
+    ]
+  },
   "tdd-green-test-lock": {
     "enabled": true,
     "PreToolUse": [
